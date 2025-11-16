@@ -42,27 +42,32 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _getWorkingTimeDetails(
-      String userId, int month) async {
+    String userId,
+    int month,
+  ) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('workingtime')
         .where('userId', isEqualTo: userId)
         .get();
 
     return querySnapshot.docs
-        .map((doc) => {
-              'id': doc.id, // Include document ID for editing
-              ...doc.data() as Map<String, dynamic>
-            })
+        .map(
+          (doc) => {
+            'id': doc.id, // Include document ID for editing
+            ...doc.data() as Map<String, dynamic>,
+          },
+        )
         .where((data) {
-      Timestamp timestamp = data['startTime'];
-      DateTime date = timestamp.toDate();
-      return date.month == month;
-    }).toList()
+          Timestamp timestamp = data['startTime'];
+          DateTime date = timestamp.toDate();
+          return date.month == month;
+        })
+        .toList()
       ..sort((a, b) {
         // Sort by date
-        return (a['startTime'] as Timestamp)
-            .toDate()
-            .compareTo((b['startTime'] as Timestamp).toDate());
+        return (a['startTime'] as Timestamp).toDate().compareTo(
+          (b['startTime'] as Timestamp).toDate(),
+        );
       });
   }
 
@@ -83,7 +88,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
     // Split data into chunks of 9 rows
     for (int i = 0; i < data.length; i += rowsPerPage) {
       final pageData = data.sublist(
-          i, (i + rowsPerPage) < data.length ? (i + rowsPerPage) : data.length);
+        i,
+        (i + rowsPerPage) < data.length ? (i + rowsPerPage) : data.length,
+      );
 
       pdf.addPage(
         pw.Page(
@@ -94,15 +101,23 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                 pw.Text(
                   'Working Time Details for ${DateFormat.MMMM().format(DateTime(0, month))}',
                   style: pw.TextStyle(
-                      fontSize: 24, fontWeight: pw.FontWeight.bold),
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
                 pw.SizedBox(height: 16),
-                pw.Text('Name: ${userDetails?['name'] ?? ''}',
-                    style: pw.TextStyle(fontSize: 18)),
-                pw.Text('Email: ${userDetails?['email'] ?? ''}',
-                    style: pw.TextStyle(fontSize: 18)),
-                pw.Text('User ID: ${widget.userId}',
-                    style: pw.TextStyle(fontSize: 18)),
+                pw.Text(
+                  'Name: ${userDetails?['name'] ?? ''}',
+                  style: pw.TextStyle(fontSize: 18),
+                ),
+                pw.Text(
+                  'Email: ${userDetails?['email'] ?? ''}',
+                  style: pw.TextStyle(fontSize: 18),
+                ),
+                pw.Text(
+                  'User ID: ${widget.userId}',
+                  style: pw.TextStyle(fontSize: 18),
+                ),
                 pw.SizedBox(height: 16),
                 pw.Table.fromTextArray(
                   headers: [
@@ -111,7 +126,7 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                     'End Time',
                     'Hours',
                     'Minutes',
-                    'UserID'
+                    'UserID',
                   ],
                   data: pageData.map((record) {
                     Timestamp timestamp = record['date'];
@@ -122,12 +137,14 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                     return [
                       DateFormat('MMMM d, yyyy h:mm:ss a').format(date),
                       startTime != null
-                          ? DateFormat('MMMM d, yyyy h:mm:ss a')
-                              .format(startTime.toDate())
+                          ? DateFormat(
+                              'MMMM d, yyyy h:mm:ss a',
+                            ).format(startTime.toDate())
                           : 'N/A',
                       endTime != null
-                          ? DateFormat('MMMM d, yyyy h:mm:ss a')
-                              .format(endTime.toDate())
+                          ? DateFormat(
+                              'MMMM d, yyyy h:mm:ss a',
+                            ).format(endTime.toDate())
                           : 'N/A',
                       record['differenceInHours'].toString(),
                       record['differenceInMinutes'].toString(),
@@ -136,9 +153,13 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                   }).toList(),
                 ),
                 pw.SizedBox(height: 16),
-                pw.Text('Total Hours: ${totalHours.toStringAsFixed(2)}',
-                    style: pw.TextStyle(
-                        fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  'Total Hours: ${totalHours.toStringAsFixed(2)}',
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ],
             );
           },
@@ -147,7 +168,8 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
     }
 
     await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   // Function to update Firestore document with new start and end times
@@ -164,11 +186,11 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
           .collection('workingtime')
           .doc(docId)
           .update({
-        'startTime': Timestamp.fromDate(editedStartTime!),
-        'endTime': Timestamp.fromDate(editedEndTime!),
-        'differenceInHours': differenceInHours,
-        'differenceInMinutes': differenceInMinutes,
-      });
+            'startTime': Timestamp.fromDate(editedStartTime!),
+            'endTime': Timestamp.fromDate(editedEndTime!),
+            'differenceInHours': differenceInHours,
+            'differenceInMinutes': differenceInMinutes,
+          });
       setState(() {
         editedStartTime = null;
         editedEndTime = null;
@@ -195,9 +217,7 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Working Time Details"),
-      ),
+      appBar: AppBar(title: Text("Working Time Details")),
       body: Column(
         children: [
           if (userDetails != null) ...[
@@ -206,12 +226,18 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Name: ${userDetails!['name']}",
-                      style: TextStyle(fontSize: 18)),
-                  Text("Email: ${userDetails!['email']}",
-                      style: TextStyle(fontSize: 18)),
-                  Text("User ID: ${widget.userId}",
-                      style: TextStyle(fontSize: 18)),
+                  Text(
+                    "Name: ${userDetails!['name']}",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    "Email: ${userDetails!['email']}",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    "User ID: ${widget.userId}",
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ],
               ),
             ),
@@ -221,18 +247,22 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                 hint: Text("Select Month"),
                 value: selectedMonth,
                 items: List.generate(
-                    12,
-                    (index) => DropdownMenuItem(
-                          child: Text(
-                              DateFormat.MMMM().format(DateTime(0, index + 1))),
-                          value: index + 1,
-                        )),
+                  12,
+                  (index) => DropdownMenuItem(
+                    child: Text(
+                      DateFormat.MMMM().format(DateTime(0, index + 1)),
+                    ),
+                    value: index + 1,
+                  ),
+                ),
                 onChanged: (value) {
                   setState(() {
                     selectedMonth = value;
                     if (value != null) {
-                      workingTimeFuture =
-                          _getWorkingTimeDetails(widget.userId, value);
+                      workingTimeFuture = _getWorkingTimeDetails(
+                        widget.userId,
+                        value,
+                      );
                     }
                   });
                 },
@@ -250,14 +280,17 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                     return Center(child: Text("Error: ${snapshot.error}"));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(
-                        child: Text(
-                            "No working time records found for the selected month"));
+                      child: Text(
+                        "No working time records found for the selected month",
+                      ),
+                    );
                   } else {
                     final workingTimeData = snapshot.data!;
                     int totalMinutes = 0;
 
                     workingTimeData.forEach((record) {
-                      int hours = (record['differenceInHours'] is double
+                      int hours =
+                          (record['differenceInHours'] is double
                               ? (record['differenceInHours'] as double).toInt()
                               : record['differenceInHours'] as int) *
                           60;
@@ -295,24 +328,46 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
 
                                   return DataRow(
                                     cells: [
-                                      DataCell(Text(
-                                          DateFormat('MMMM d, yyyy h:mm:ss a')
-                                              .format(date))),
-                                      DataCell(Text(startTime != null
-                                          ? DateFormat('MMMM d, yyyy h:mm:ss a')
-                                              .format(startTime.toDate())
-                                          : 'N/A')),
-                                      DataCell(Text(endTime != null
-                                          ? DateFormat('MMMM d, yyyy h:mm:ss a')
-                                              .format(endTime.toDate())
-                                          : 'N/A')),
-                                      DataCell(Text(record['differenceInHours']
-                                          .toString())),
-                                      DataCell(Text(
-                                          record['differenceInMinutes']
-                                              .toString())),
                                       DataCell(
-                                          Text(record['userId'].toString())),
+                                        Text(
+                                          DateFormat(
+                                            'MMMM d, yyyy h:mm:ss a',
+                                          ).format(date),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          startTime != null
+                                              ? DateFormat(
+                                                  'MMMM d, yyyy h:mm:ss a',
+                                                ).format(startTime.toDate())
+                                              : 'N/A',
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          endTime != null
+                                              ? DateFormat(
+                                                  'MMMM d, yyyy h:mm:ss a',
+                                                ).format(endTime.toDate())
+                                              : 'N/A',
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          record['differenceInHours']
+                                              .toString(),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          record['differenceInMinutes']
+                                              .toString(),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(record['userId'].toString()),
+                                      ),
                                       DataCell(
                                         Row(
                                           children: [
@@ -323,10 +378,10 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                                 setState(() {
                                                   documentIdToEdit =
                                                       record['id'];
-                                                  editedStartTime =
-                                                      startTime?.toDate();
-                                                  editedEndTime =
-                                                      endTime?.toDate();
+                                                  editedStartTime = startTime
+                                                      ?.toDate();
+                                                  editedEndTime = endTime
+                                                      ?.toDate();
                                                 });
                                               },
                                             ),
@@ -336,7 +391,8 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                                 // Start deleting
                                                 if (record['id'] != null) {
                                                   _deleteWorkingTime(
-                                                      record['id']);
+                                                    record['id'],
+                                                  );
                                                 }
                                               },
                                             ),
@@ -355,7 +411,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                           child: Text(
                             "Total Hours: $hours hours $minutes minutes",
                             style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         ElevatedButton(
@@ -375,7 +433,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                   onTap: () async {
                                     DateTime? newStartTime =
                                         await showDateTimePicker(
-                                            context, editedStartTime);
+                                          context,
+                                          editedStartTime,
+                                        );
                                     if (newStartTime != null) {
                                       setState(() {
                                         editedStartTime = newStartTime;
@@ -383,9 +443,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                     }
                                   },
                                   decoration: InputDecoration(
-                                    labelText:
-                                        DateFormat('MMMM d, yyyy h:mm:ss a')
-                                            .format(editedStartTime!),
+                                    labelText: DateFormat(
+                                      'MMMM d, yyyy h:mm:ss a',
+                                    ).format(editedStartTime!),
                                   ),
                                 ),
                                 Text("Edit End Time:"),
@@ -394,7 +454,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                   onTap: () async {
                                     DateTime? newEndTime =
                                         await showDateTimePicker(
-                                            context, editedEndTime);
+                                          context,
+                                          editedEndTime,
+                                        );
                                     if (newEndTime != null) {
                                       setState(() {
                                         editedEndTime = newEndTime;
@@ -402,9 +464,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
                                     }
                                   },
                                   decoration: InputDecoration(
-                                    labelText:
-                                        DateFormat('MMMM d, yyyy h:mm:ss a')
-                                            .format(editedEndTime!),
+                                    labelText: DateFormat(
+                                      'MMMM d, yyyy h:mm:ss a',
+                                    ).format(editedEndTime!),
                                   ),
                                 ),
                                 Row(
@@ -445,7 +507,9 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
   }
 
   Future<DateTime?> showDateTimePicker(
-      BuildContext context, DateTime? initialDate) async {
+    BuildContext context,
+    DateTime? initialDate,
+  ) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -460,8 +524,13 @@ class _WorkingTimeScreenState extends State<WorkingTimeScreen> {
       );
 
       if (pickedTime != null) {
-        return DateTime(pickedDate.year, pickedDate.month, pickedDate.day,
-            pickedTime.hour, pickedTime.minute);
+        return DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
       }
     }
     return null;
