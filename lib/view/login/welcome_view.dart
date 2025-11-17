@@ -4,7 +4,6 @@ import 'package:quickrun5/auth/login_view.dart';
 import 'package:quickrun5/auth/signup_screen.dart';
 import 'package:quickrun5/common/color_extension.dart';
 import 'package:quickrun5/common_widget/round_button.dart';
-
 import 'package:quickrun5/view/admin2/admin_login_view.dart';
 
 class WelcomeView extends StatefulWidget {
@@ -15,46 +14,42 @@ class WelcomeView extends StatefulWidget {
 }
 
 class _WelcomeViewState extends State<WelcomeView> {
+  // Defining the red color from the logo locally for this view
+  // You can also move this to your TColor class later
+  final Color primaryRed = const Color(0xFFCD1C1C);
+
   @override
   Widget build(BuildContext context) {
     var media = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Container(
-        height: media.height, // Ensure the container takes full screen height
-        width: media.width, // Ensure the container takes full screen width
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              "assets/img/splash_bg.png",
-            ), // Your background image
-            fit: BoxFit.cover,
-          ),
-        ),
+      backgroundColor: Colors.white, // Set background to white to match logo
+      body: SizedBox(
+        height: media.height,
+        width: media.width,
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: media.width * 0.5), // Adjust spacing
-              Text(
-                "Quick Run",
-                style: TextStyle(
-                  fontSize: media.width * 0.1, // Adjust font size as needed
-                  color: Color.fromARGB(255, 15, 15, 15),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Spacing from top
+              SizedBox(height: media.height * 0.15),
+
+              // Logo Image
               SizedBox(
-                height: media.width * 0.5,
-                child: Image.asset(
-                  "assets/pic/logo.png", // Replace with your logo image path
-                  fit: BoxFit.contain, // Adjust the fit as needed
-                ),
+                height: media.width * 0.6, // Increased size slightly for impact
+                width: media.width * 0.8,
+                child: Image.asset("assets/pic/logo.png", fit: BoxFit.contain),
               ),
-              SizedBox(height: media.width * 0.05), // Adjust spacing
+
+              // Text Title (Optional: If your logo image already has text, remove this widget)
+              SizedBox(height: media.height * 0.08), // Spacing before buttons
+              // Login Button (Red Background)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: RoundButton(
                   title: "Login",
+                  // Assuming your RoundButton accepts a color property
+                  // If not, ensure TColor.primary is set to this red in your extension
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -65,12 +60,16 @@ class _WelcomeViewState extends State<WelcomeView> {
                   },
                 ),
               ),
-              SizedBox(height: media.width * 0.1), // Adjust spacing
+
+              const SizedBox(height: 20),
+
+              // Sign Up Button (Red Text / Outline)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: RoundButton(
                   title: "Sign up",
-                  type: RoundButtonType.textPrimary,
+                  type:
+                      RoundButtonType.textPrimary, // Ensures outline/text style
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -81,7 +80,10 @@ class _WelcomeViewState extends State<WelcomeView> {
                   },
                 ),
               ),
-              SizedBox(height: 40),
+
+              const SizedBox(height: 40),
+
+              // Admin Login Link
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -95,7 +97,7 @@ class _WelcomeViewState extends State<WelcomeView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Admin Login ",
+                      "Go to ",
                       style: TextStyle(
                         color: TColor.secondaryText,
                         fontSize: 14,
@@ -105,7 +107,7 @@ class _WelcomeViewState extends State<WelcomeView> {
                     Text(
                       "Admin Login",
                       style: TextStyle(
-                        color: TColor.primary,
+                        color: primaryRed, // Use the logo red
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -113,6 +115,9 @@ class _WelcomeViewState extends State<WelcomeView> {
                   ],
                 ),
               ),
+
+              // Bottom padding
+              SizedBox(height: 20),
             ],
           ),
         ),
