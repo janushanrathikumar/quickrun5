@@ -4,7 +4,7 @@ import 'package:quickrun5/common_widget/tab_button.dart';
 
 import 'package:quickrun5/view/user/home_screen.dart';
 import 'package:quickrun5/view/user/order.dart';
-import 'package:quickrun5/view/user/qr.dart';
+import 'package:quickrun5/view/user/user_location_view.dart';
 import 'package:quickrun5/view/user/report.dart';
 
 class MainTabView extends StatefulWidget {
@@ -55,19 +55,20 @@ class _MainTabViewState extends State<MainTabView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // TabButton(
-              //     title: "Start",
-              //     icon: "assets/img/tab_order.png",
-              //     onTap: () {
-              //       if (selctTab != 1) {
-              //         selctTab = 1;
-              //         selectPageView = qrCode();
-              //       }
-              //       if (mounted) {
-              //         setState(() {});
-              //       }
-              //     },
-              //     isSelected: selctTab == 1),
+              TabButton(
+                title: "view location",
+                icon: "assets/img/tab_order.png",
+                onTap: () {
+                  if (selctTab != 1) {
+                    selctTab = 1;
+                    selectPageView = ActiveDriversMapScreen();
+                  }
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
+                isSelected: selctTab == 1,
+              ),
               const SizedBox(width: 100, height: 100),
               TabButton(
                 title: "report",

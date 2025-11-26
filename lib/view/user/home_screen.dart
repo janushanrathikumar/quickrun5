@@ -2,16 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quickrun5/auth/auth_service.dart';
-
 import 'package:quickrun5/common_widget/round_button.dart';
 import 'package:quickrun5/view/on_boarding/startup_view.dart';
 import 'package:quickrun5/view/user/calculation.dart';
 import 'package:quickrun5/view/user/qr.dart';
-
 import 'package:quickrun5/widgets/button.dart' as DeleveryButton;
 
-class HomeScreen extends StatelessWidget {
+// IMPORT PACKAGES
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // <--- ADDED IMPORT
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissions();
+  }
+
+  // Request Location Permissions on screen load
+  Future<void> _requestPermissions() async {
+    await Permission.location.request();
+    await Permission.locationAlways.request(); // Important for background
+    await Permission.notification.request();
+  }
+
+  // HELPER: Control Background Service
+  void _manageBackgroundService(String availability) async {
+    final service = FlutterBackgroundService();
+    bool isRunning = await service.isRunning();
+
+    if (availability == 'start' || availability == 'break') {
+      if (!isRunning) {
+        // --- SAVE UID BEFORE STARTING ---
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_uid', user.uid);
+          print("User UID saved for background service: ${user.uid}");
+        }
+        // -------------------------------
+
+        service.startService();
+        print("Background Location Service Started");
+      }
+    } else if (availability == 'end') {
+      if (isRunning) {
+        service.invoke("stopService");
+        print("Background Location Service Stopped");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +68,12 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        automaticallyImplyLeading: false, // Remove the back button
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage(
-              "assets/img/splash_bg.png",
-            ), // Path to your background image
+            image: AssetImage("assets/img/splash_bg.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -54,8 +100,19 @@ class HomeScreen extends StatelessWidget {
                         return Center(child: CircularProgressIndicator());
                       }
 
+                      // Handle case where document doesn't exist yet
+                      if (!snapshot.hasData || !snapshot.data!.exists) {
+                        return Text("No status available");
+                      }
+
                       final availability = snapshot.data!['available'];
-                      Color notificationColor = Colors.grey; // Default color
+                      Color notificationColor = Colors.grey;
+
+                      // --- TRIGGER SERVICE BASED ON STATE ---
+                      Future.delayed(Duration.zero, () {
+                        _manageBackgroundService(availability);
+                      });
+                      // --------------------------------------
 
                       if (availability == 'end') {
                         notificationColor = Colors.red;
@@ -115,7 +172,6 @@ class HomeScreen extends StatelessWidget {
               RoundButton(
                 title: "Start",
                 onPressed: () async {
-                  // Check current availability
                   final availability = await getCurrentAvailability();
                   if (availability != null && availability == 'start') {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +185,6 @@ class HomeScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(builder: (context) => qrCode()),
                     );
-                    // If availability is not "start", proceed with action
                   }
                 },
               ),
@@ -137,7 +192,6 @@ class HomeScreen extends StatelessWidget {
               RoundButton(
                 title: "End",
                 onPressed: () async {
-                  // Check current availability
                   final availability = await getCurrentAvailability();
                   if (availability != null && availability == 'end') {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -147,7 +201,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                     );
                   } else {
-                    // If availability is not "end", proceed with action
                     await checkAvailabilityAndPerformAction('end', context);
                     Navigator.push(
                       context,
@@ -162,6 +215,9 @@ class HomeScreen extends StatelessWidget {
               RoundButton(
                 title: "Sign Out",
                 onPressed: () async {
+                  final service = FlutterBackgroundService();
+                  service.invoke("stopService");
+
                   await auth.signout();
                   Navigator.pushReplacement(
                     context,
@@ -187,14 +243,10 @@ class HomeScreen extends StatelessWidget {
         final userDoc = await userRef.get();
         if (userDoc.exists) {
           return userDoc.data()?['available'];
-        } else {
-          print('User document not found.');
         }
-      } else {
-        print('User not logged in!');
       }
     } catch (e) {
-      print('Error checking current availability: $e');
+      print('Error: $e');
     }
     return null;
   }
@@ -203,40 +255,7 @@ class HomeScreen extends StatelessWidget {
     String action,
     BuildContext context,
   ) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final userId = user.uid;
-
-        final userRef = FirebaseFirestore.instance
-            .collection('available')
-            .doc(userId);
-
-        final userDoc = await userRef.get();
-        if (userDoc.exists) {
-          final availability = userDoc.data()?['available'];
-
-          if (availability == 'break') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Cannot perform action. Availability is on break.',
-                ),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          } else {
-            await _updateAvailability(action);
-          }
-        } else {
-          print('User document not found.');
-        }
-      } else {
-        print('User not logged in!');
-      }
-    } catch (e) {
-      print('Error checking availability: $e');
-    }
+    await _updateAvailability(action);
   }
 
   Future<void> _updateAvailability(String availability) async {
@@ -245,7 +264,6 @@ class HomeScreen extends StatelessWidget {
       if (user != null) {
         final userId = user.uid;
         final userEmail = user.email;
-
         final userRef = FirebaseFirestore.instance
             .collection('available')
             .doc(userId);
@@ -253,14 +271,9 @@ class HomeScreen extends StatelessWidget {
         final userDoc = await userRef.get();
         if (userDoc.exists) {
           await userRef.update({'available': availability, 'email': userEmail});
-          print('Availability updated successfully!');
         } else {
-          print('User document not found. Creating new document...');
           await userRef.set({'available': availability, 'email': userEmail});
-          print('User document created with availability: $availability');
         }
-      } else {
-        print('User not logged in!');
       }
     } catch (e) {
       print('Error updating availability: $e');
