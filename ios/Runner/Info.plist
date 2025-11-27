@@ -54,6 +54,10 @@
   		<string>sms</string>
   		<string>tel</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This permission is required to show your current location on the map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We require "Always" location access to track driver positions and provide real-time updates for dispatch and delivery purposes, even when the app is closed or running in the background.</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
     	<string>dev.flutter.background.refresh</string>
